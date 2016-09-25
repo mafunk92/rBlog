@@ -75,11 +75,11 @@
 
 	var _routes2 = _interopRequireDefault(_routes);
 
-	var _reducers = __webpack_require__(334);
+	var _reducers = __webpack_require__(335);
 
 	var _reducers2 = _interopRequireDefault(_reducers);
 
-	var _style = __webpack_require__(336);
+	var _style = __webpack_require__(337);
 
 	var _style2 = _interopRequireDefault(_style);
 
@@ -29390,13 +29390,18 @@
 
 	var _posts_new2 = _interopRequireDefault(_posts_new);
 
+	var _posts_show = __webpack_require__(334);
+
+	var _posts_show2 = _interopRequireDefault(_posts_show);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	exports.default = _react2.default.createElement(
 	  _reactRouter.Route,
 	  { path: '/', component: _app2.default },
 	  _react2.default.createElement(_reactRouter.IndexRoute, { component: _posts_index2.default }),
-	  _react2.default.createElement(_reactRouter.Route, { path: 'posts/new', component: _posts_new2.default })
+	  _react2.default.createElement(_reactRouter.Route, { path: 'posts/new', component: _posts_new2.default }),
+	  _react2.default.createElement(_reactRouter.Route, { path: 'posts/:id', component: _posts_show2.default })
 	);
 
 /***/ },
@@ -29497,6 +29502,31 @@
 	      this.props.fetchPosts();
 	    }
 	  }, {
+	    key: 'renderPosts',
+	    value: function renderPosts() {
+
+	      return this.props.posts.map(function (post) {
+	        return _react2.default.createElement(
+	          'li',
+	          { className: 'list-group-item', key: post.id },
+	          _react2.default.createElement(
+	            _reactRouter.Link,
+	            { to: "posts/" + post.id },
+	            _react2.default.createElement(
+	              'span',
+	              { className: 'pull-xs-right' },
+	              post.categories
+	            ),
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              post.title
+	            )
+	          )
+	        );
+	      });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
@@ -29511,7 +29541,16 @@
 	            'Add a Post'
 	          )
 	        ),
-	        'List of blog posts:'
+	        _react2.default.createElement(
+	          'h3',
+	          null,
+	          'Posts'
+	        ),
+	        _react2.default.createElement(
+	          'ul',
+	          { className: 'list-group' },
+	          this.renderPosts()
+	        )
 	      );
 	    }
 	  }]);
@@ -29519,7 +29558,11 @@
 	  return PostsIndex;
 	}(_react.Component);
 
-	exports.default = (0, _reactRedux.connect)(null, { fetchPosts: _index.fetchPosts })(PostsIndex);
+	function mapStateToProps(state) {
+	  return { posts: state.posts.all };
+	}
+
+	exports.default = (0, _reactRedux.connect)(mapStateToProps, { fetchPosts: _index.fetchPosts })(PostsIndex);
 
 /***/ },
 /* 267 */
@@ -29530,9 +29573,11 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.CREATE_POST = exports.FETCH_POSTS = undefined;
+	exports.DELETE_POST = exports.FETCH_POST = exports.CREATE_POST = exports.FETCH_POSTS = undefined;
 	exports.fetchPosts = fetchPosts;
 	exports.createPost = createPost;
+	exports.fetchPost = fetchPost;
+	exports.deletePost = deletePost;
 
 	var _axios = __webpack_require__(268);
 
@@ -29546,6 +29591,8 @@
 	//Action Types
 	var FETCH_POSTS = exports.FETCH_POSTS = 'FETCH_POSTS';
 	var CREATE_POST = exports.CREATE_POST = 'CREATE_POST';
+	var FETCH_POST = exports.FETCH_POST = 'FETCH_POST';
+	var DELETE_POST = exports.DELETE_POST = 'DELETE_POST';
 
 	function fetchPosts() {
 
@@ -29559,10 +29606,30 @@
 
 	function createPost(props) {
 
-	  var request = _axios2.default.post(ROOT_URL + '/posts' + API_KEY);
+	  var request = _axios2.default.post(ROOT_URL + '/posts' + API_KEY, props);
 
 	  return {
 	    type: CREATE_POST,
+	    payload: request
+	  };
+	}
+
+	function fetchPost(id) {
+
+	  var request = _axios2.default.get(ROOT_URL + '/posts/' + id + API_KEY);
+
+	  return {
+	    type: FETCH_POST,
+	    payload: request
+	  };
+	}
+
+	function deletePost(id) {
+
+	  var request = _axios2.default.delete(ROOT_URL + '/posts/' + id + API_KEY);
+
+	  return {
+	    type: DELETE_POST,
 	    payload: request
 	  };
 	}
@@ -30931,6 +30998,10 @@
 
 	var _reduxForm = __webpack_require__(291);
 
+	var _reactRouter = __webpack_require__(173);
+
+	var _index = __webpack_require__(267);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -30949,6 +31020,15 @@
 	  }
 
 	  _createClass(PostsNew, [{
+	    key: 'onSubmit',
+	    value: function onSubmit(props) {
+	      var _this2 = this;
+
+	      this.props.createPost(props).then(function () {
+	        _this2.context.router.push('/');
+	      });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 
@@ -30964,7 +31044,7 @@
 
 	      return _react2.default.createElement(
 	        'form',
-	        { onSubmit: handleSubmit },
+	        { onSubmit: handleSubmit(this.onSubmit.bind(this)) },
 	        _react2.default.createElement(
 	          'h3',
 	          null,
@@ -30972,38 +31052,58 @@
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'form-group' },
+	          { className: 'form-group ' + (title.touched && title.invalid ? 'has-danger' : '') },
 	          _react2.default.createElement(
 	            'label',
 	            null,
 	            'Title'
 	          ),
-	          _react2.default.createElement('input', _extends({ type: 'text', className: 'form-control' }, title))
+	          _react2.default.createElement('input', _extends({ type: 'text', className: 'form-control' }, title)),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'text-help' },
+	            title.touched ? title.error : null
+	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'form-group' },
+	          { className: 'form-group ' + (categories.touched && categories.invalid ? 'has-danger' : '') },
 	          _react2.default.createElement(
 	            'label',
 	            null,
 	            'categories'
 	          ),
-	          _react2.default.createElement('input', _extends({ type: 'text', className: 'form-control' }, categories))
+	          _react2.default.createElement('input', _extends({ type: 'text', className: 'form-control' }, categories)),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'text-help' },
+	            categories.touched ? categories.error : null
+	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'form-group' },
+	          { className: 'form-group ' + (content.touched && content.invalid ? 'has-danger' : '') },
 	          _react2.default.createElement(
 	            'label',
 	            null,
 	            'Content'
 	          ),
-	          _react2.default.createElement('textarea', _extends({ type: 'text', className: 'form-control' }, content))
+	          _react2.default.createElement('textarea', _extends({ type: 'text', className: 'form-control' }, content)),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'text-help' },
+	            content.touched ? content.error : null
+	          )
 	        ),
 	        _react2.default.createElement(
 	          'button',
 	          { type: 'submit', className: 'btn btn-primary' },
 	          'Submit'
+	        ),
+	        _react2.default.createElement(
+	          _reactRouter.Link,
+	          { to: '/', className: 'btn btn-danger' },
+	          'Cancel'
 	        )
 	      );
 	    }
@@ -31012,10 +31112,35 @@
 	  return PostsNew;
 	}(_react.Component);
 
+	PostsNew.contextTypes = {
+	  router: _react.PropTypes.object
+	};
+
+
+	function validate(values) {
+
+	  var errors = {};
+
+	  if (!values.title) {
+	    errors.title = 'Enter a title';
+	  }
+
+	  if (!values.categories) {
+	    errors.categories = 'Enter categories';
+	  }
+
+	  if (!values.content) {
+	    errors.content = 'Enter content';
+	  }
+
+	  return errors;
+	}
+
 	exports.default = (0, _reduxForm.reduxForm)({
 	  form: 'PostsNewForm',
-	  fields: ['title', 'categories', 'content']
-	})(PostsNew);
+	  fields: ['title', 'categories', 'content'],
+	  validate: validate
+	}, null, { createPost: _index.createPost })(PostsNew);
 
 /***/ },
 /* 291 */
@@ -33920,11 +34045,124 @@
 	  value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(2);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(236);
+
+	var _reactRouter = __webpack_require__(173);
+
+	var _index = __webpack_require__(267);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var PostsShow = function (_Component) {
+	  _inherits(PostsShow, _Component);
+
+	  function PostsShow() {
+	    _classCallCheck(this, PostsShow);
+
+	    return _possibleConstructorReturn(this, (PostsShow.__proto__ || Object.getPrototypeOf(PostsShow)).apply(this, arguments));
+	  }
+
+	  _createClass(PostsShow, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.props.fetchPost(this.props.params.id);
+	    }
+	  }, {
+	    key: 'onDeleteClick',
+	    value: function onDeleteClick() {
+	      var _this2 = this;
+
+	      this.props.deletePost(this.props.params.id).then(function () {
+	        _this2.context.router.push('/');
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+
+	      if (!this.props.post) {
+	        // good pattern to show loading spinner
+	        return _react2.default.createElement(
+	          'div',
+	          null,
+	          'Loading...'
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          _reactRouter.Link,
+	          { to: '/', className: 'btn btn-primary' },
+	          'Home'
+	        ),
+	        _react2.default.createElement(
+	          'h3',
+	          null,
+	          this.props.post.title
+	        ),
+	        _react2.default.createElement(
+	          'h6',
+	          null,
+	          'Categories: ',
+	          this.props.post.categories
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          null,
+	          this.props.post.content
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'btn btn-danger pull-xs-right', onClick: this.onDeleteClick.bind(this) },
+	          'Delete Post'
+	        )
+	      );
+	    }
+	  }]);
+
+	  return PostsShow;
+	}(_react.Component);
+
+	PostsShow.contextTypes = {
+	  router: _react.PropTypes.object
+	};
+
+
+	function mapStateToProps(state) {
+	  return { post: state.posts.post };
+	}
+
+	exports.default = (0, _reactRedux.connect)(mapStateToProps, { fetchPost: _index.fetchPost, deletePost: _index.deletePost })(PostsShow);
+
+/***/ },
+/* 335 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _redux = __webpack_require__(243);
 
 	var _reduxForm = __webpack_require__(291);
 
-	var _reducer_posts = __webpack_require__(335);
+	var _reducer_posts = __webpack_require__(336);
 
 	var _reducer_posts2 = _interopRequireDefault(_reducer_posts);
 
@@ -33938,7 +34176,7 @@
 	exports.default = rootReducer;
 
 /***/ },
-/* 335 */
+/* 336 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33959,6 +34197,9 @@
 	    case _index.FETCH_POSTS:
 	      return _extends({}, state, { all: action.payload.data });
 
+	    case _index.FETCH_POST:
+	      return _extends({}, state, { post: action.payload.data });
+
 	    default:
 	      return state;
 
@@ -33973,16 +34214,16 @@
 	};
 
 /***/ },
-/* 336 */
+/* 337 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(337);
+	var content = __webpack_require__(338);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(339)(content, {});
+	var update = __webpack_require__(340)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -33999,21 +34240,21 @@
 	}
 
 /***/ },
-/* 337 */
+/* 338 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(338)();
+	exports = module.exports = __webpack_require__(339)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "body {\n    background-color: whitesmoke;\n}\n\n#app {\n    margin-top: 5%;\n}", ""]);
+	exports.push([module.id, "body {\n    background-color: whitesmoke;\n}\n\n#app {\n    margin-top: 5%;\n}\n\nform a {\n    margin-left: 5px;\n}\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 338 */
+/* 339 */
 /***/ function(module, exports) {
 
 	/*
@@ -34069,7 +34310,7 @@
 
 
 /***/ },
-/* 339 */
+/* 340 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
