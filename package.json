@@ -1,5 +1,5 @@
 {
-  "name": "reactStarter",
+  "name": "rBlog",
   "version": "1.0.0",
   "description": "Created On Sep 18, 2016",
   "main": "index.js",
@@ -11,7 +11,7 @@
   "author": "mfunk@mafunk.info",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OmniBytes/reactStarter.git"
+    "url": "https://github.com/mafunk92/rBlog.git"
   },
   "license": "ISC",
   "dependencies": {
@@ -19,6 +19,7 @@
     "react": "^15.3.0",
     "react-dom": "^15.3.0",
     "react-router": "^2.8.1",
+    "redux-form": "^4.1.3",
     "redux-promise": "^0.5.3"
   },
   "devDependencies": {

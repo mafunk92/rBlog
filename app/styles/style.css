@@ -5,3 +5,7 @@ body {
 #app {
     margin-top: 5%;
 }
+
+form a {
+    margin-left: 5px;
+}
